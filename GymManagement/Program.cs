@@ -19,7 +19,8 @@ var database = Environment.GetEnvironmentVariable("PGDATABASE");
 var username = Environment.GetEnvironmentVariable("PGUSER");
 var password = Environment.GetEnvironmentVariable("PGPASSWORD");
 
-var connectionString = $"Host={host};Database={database};Username={username};Password={password};SSL Mode=Require;";
+var connectionString = $"Host={host};Database={database};Username={username};Password={password};SSL Mode=VerifyFull;Trust Server Certificate=false;";
+
 
 
 Console.WriteLine($"PGHOST='{host}'");
