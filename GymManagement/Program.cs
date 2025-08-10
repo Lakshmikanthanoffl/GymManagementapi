@@ -21,6 +21,12 @@ var password = Environment.GetEnvironmentVariable("PGPASSWORD");
 
 var connectionString = $"Host={host};Database={database};Username={username};Password={password};SSL Mode=Require;";
 
+
+Console.WriteLine($"PGHOST='{host}'");
+Console.WriteLine($"PGDATABASE='{database}'");
+Console.WriteLine($"PGUSER='{username}'");
+Console.WriteLine($"PGPASSWORD is {(string.IsNullOrEmpty(password) ? "missing" : "set")}");
+
 // Register DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
