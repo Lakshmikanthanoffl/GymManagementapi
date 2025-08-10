@@ -25,7 +25,6 @@ var connectionString = $"Host={host};Database={database};Username={username};Pas
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
 
-
 // ------------------- Services Registration -------------------
 builder.Services.AddScoped<IMembersRepository, MembersRepository>();
 builder.Services.AddScoped<IMembersService, MembersService>();
@@ -58,11 +57,9 @@ var app = builder.Build();
 
 app.UseCors("AllowAll");
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+// **Enable Swagger in ALL environments**
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 app.UseAuthorization();
