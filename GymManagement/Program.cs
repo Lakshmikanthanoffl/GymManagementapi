@@ -13,15 +13,41 @@ var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.UseUrls("http://+:8080");
 
 // ------------------- Database Connection -------------------
-// Build connection string from environment variables (Railway/Neon)
+// Read environment variables (Railway/Neon)
 var host = Environment.GetEnvironmentVariable("PGHOST");
 var database = Environment.GetEnvironmentVariable("PGDATABASE");
 var username = Environment.GetEnvironmentVariable("PGUSER");
 var password = Environment.GetEnvironmentVariable("PGPASSWORD");
 
-var connectionString = $"Host={host};Database={database};Username={username};Password={password};SSL Mode=VerifyFull;Trust Server Certificate=false;";
+// Fallback raw connection string from appsettings.json (may contain placeholders)
+var rawFallbackConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-// Debug print environment variables to logs (for verification)
+string connectionString;
+
+if (!string.IsNullOrWhiteSpace(host) &&
+    !string.IsNullOrWhiteSpace(database) &&
+    !string.IsNullOrWhiteSpace(username) &&
+    !string.IsNullOrWhiteSpace(password))
+{
+    connectionString = $"Host={host};Database={database};Username={username};Password={password};SSL Mode=VerifyFull;Trust Server Certificate=false;";
+}
+else if (!string.IsNullOrWhiteSpace(rawFallbackConnectionString))
+{
+    // Replace placeholders in fallback connection string with env vars (or empty if missing)
+    connectionString = rawFallbackConnectionString
+        .Replace("${PGHOST}", Environment.GetEnvironmentVariable("PGHOST") ?? "")
+        .Replace("${PGDATABASE}", Environment.GetEnvironmentVariable("PGDATABASE") ?? "")
+        .Replace("${PGUSER}", Environment.GetEnvironmentVariable("PGUSER") ?? "")
+        .Replace("${PGPASSWORD}", Environment.GetEnvironmentVariable("PGPASSWORD") ?? "");
+
+    Console.WriteLine("Using fallback connection string with replaced environment variables.");
+}
+else
+{
+    throw new Exception("No valid connection string found. Please set environment variables or provide a fallback connection string.");
+}
+
+// Debug print environment variables (avoid printing password in production)
 Console.WriteLine($"PGHOST='{host}'");
 Console.WriteLine($"PGDATABASE='{database}'");
 Console.WriteLine($"PGUSER='{username}'");
@@ -66,7 +92,6 @@ var app = builder.Build();
 
 app.UseCors("AllowAll");
 
-// Enable Swagger UI on all environments
 app.UseSwagger();
 app.UseSwaggerUI();
 
