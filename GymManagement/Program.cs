@@ -25,7 +25,6 @@ var connectionString = $"Host={host};Database={database};Username={username};Pas
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
 
-NpgsqlConnection.GlobalTypeMapper.EnableDynamicJson();
 
 // ------------------- Services Registration -------------------
 builder.Services.AddScoped<IMembersRepository, MembersRepository>();
