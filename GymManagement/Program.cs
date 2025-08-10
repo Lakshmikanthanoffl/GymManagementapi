@@ -9,17 +9,21 @@ using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ------------------- Services Configuration -------------------
+// ------------------- Database Connection -------------------
+var connectionString =
+    Environment.GetEnvironmentVariable("DefaultConnection") ??
+    builder.Configuration.GetConnectionString("DefaultConnection");
 
-// 🔌 Add PostgreSQL DB Context
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(connectionString));
 
-// 🔄 Register Repositories and Services
+NpgsqlConnection.GlobalTypeMapper.EnableDynamicJson();
+
+// ------------------- Services Registration -------------------
 builder.Services.AddScoped<IMembersRepository, MembersRepository>();
 builder.Services.AddScoped<IMembersService, MembersService>();
 
-// 🌐 Add CORS Policy
+// ------------------- CORS Policy -------------------
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
@@ -29,8 +33,8 @@ builder.Services.AddCors(options =>
               .AllowAnyHeader();
     });
 });
-NpgsqlConnection.GlobalTypeMapper.EnableDynamicJson();
-// 📦 Add Controllers with Newtonsoft JSON support
+
+// ------------------- Controllers -------------------
 builder.Services.AddControllers()
     .AddNewtonsoftJson(options =>
     {
@@ -38,30 +42,23 @@ builder.Services.AddControllers()
         options.SerializerSettings.ContractResolver = new DefaultContractResolver();
     });
 
-// 📖 Swagger for API Documentation
+// ------------------- Swagger -------------------
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// ------------------- App Pipeline Configuration -------------------
-
+// ------------------- App Pipeline -------------------
 var app = builder.Build();
 
-// Use CORS
 app.UseCors("AllowAll");
 
-// Enable Swagger in Development
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-// Standard Middleware
 app.UseHttpsRedirection();
 app.UseAuthorization();
-
-// Map Controllers
 app.MapControllers();
 
-// Run the App
 app.Run();
