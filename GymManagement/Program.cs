@@ -64,6 +64,10 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddScoped<IMembersRepository, MembersRepository>();
 builder.Services.AddScoped<IMembersService, MembersService>();
 
+builder.Services.AddScoped<IRoleRepository, RoleRepository>();
+builder.Services.AddScoped<IRoleService, RoleService>();
+
+
 // ------------------- CORS Policy -------------------
 builder.Services.AddCors(options =>
 {

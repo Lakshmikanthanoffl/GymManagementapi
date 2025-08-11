@@ -1,0 +1,17 @@
+﻿using GymManagement.Models;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+namespace GymManagement.Interfaces
+{
+    public interface IRoleRepository
+    {
+        Task<IEnumerable<Role>> GetAllRolesAsync();
+        Task<Role?> GetRoleByIdAsync(int roleId);
+        Task AddRoleAsync(Role role);
+        Task UpdateRoleAsync(Role role);
+        Task DeleteRoleAsync(int roleId);
+        Task<Role?> GetRoleByEmailAndPasswordAsync(string email, string password);
+
+    }
+}
