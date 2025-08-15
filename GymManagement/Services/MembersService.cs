@@ -36,5 +36,10 @@ namespace GymManagement.Services
         {
             await _repository.DeleteAsync(id);
         }
+        // ✅ New method implementation
+        public async Task<IEnumerable<Member>> GetMembersByGymAsync(int gymId, string gymName)
+        {
+            return await _repository.GetMembersByGymAsync(gymId, gymName);
+        }
     }
 }

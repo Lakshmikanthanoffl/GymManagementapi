@@ -1,4 +1,6 @@
 ﻿using GymManagement.Models;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace GymManagement.Interfaces
 {
@@ -9,5 +11,8 @@ namespace GymManagement.Interfaces
         Task AddAsync(Member member);
         Task UpdateAsync(Member member);
         Task DeleteAsync(int id);
+
+        // ✅ New method to get members by GymId or GymName
+        Task<IEnumerable<Member>> GetMembersByGymAsync(int gymId, string gymName);
     }
 }

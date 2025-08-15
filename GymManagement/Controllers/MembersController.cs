@@ -51,5 +51,12 @@ namespace GymManagement.Controllers
             await _membersService.DeleteMemberAsync(id);
             return NoContent();
         }
+        // ✅ New endpoint: Get members by GymId and GymName
+        [HttpGet("by-gym")]
+        public async Task<IActionResult> GetByGym([FromQuery] int gymId, [FromQuery] string gymName)
+        {
+            var members = await _membersService.GetMembersByGymAsync(gymId, gymName);
+            return Ok(members);
+        }
     }
 }

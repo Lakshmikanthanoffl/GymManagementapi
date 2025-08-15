@@ -45,5 +45,12 @@ namespace GymManagement.Repositories
                 await _context.SaveChangesAsync();
             }
         }
+        // ✅ New method implementation
+        public async Task<IEnumerable<Member>> GetMembersByGymAsync(int gymId, string gymName)
+        {
+            return await _context.Members
+                .Where(m => m.GymId == gymId && m.GymName == gymName)
+                .ToListAsync();
+        }
     }
 }
