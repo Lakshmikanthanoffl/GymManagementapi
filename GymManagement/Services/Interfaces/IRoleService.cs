@@ -13,5 +13,7 @@ namespace GymManagement.Interfaces
         Task DeleteRoleAsync(int roleId);
         Task<Role?> GetRoleByEmailAndPasswordAsync(string email, string password);
 
+        // ✅ New method for fetching by GymId & GymName
+        Task<Role?> GetRoleByGymIdAndNameAsync(int gymId, string gymName);
     }
 }

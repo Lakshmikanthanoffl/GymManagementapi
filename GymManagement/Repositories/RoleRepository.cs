@@ -52,5 +52,11 @@ namespace GymManagement.Repositories
             return await _context.Roles
                 .FirstOrDefaultAsync(r => r.UserEmail == email && r.Password == password);
         }
+        public async Task<Role?> GetRoleByGymIdAndNameAsync(int gymId, string gymName)
+        {
+            return await _context.Roles
+                .FirstOrDefaultAsync(r => r.GymId == gymId && r.GymName == gymName);
+        }
+
     }
 }

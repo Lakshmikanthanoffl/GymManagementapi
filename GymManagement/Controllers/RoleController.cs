@@ -50,7 +50,7 @@ namespace GymManagement.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateRole(int id, Role role)
         {
-            if (role == null || role.RoleId != id) // ✅ fixed: RoleId instead of Id
+            if (role == null || role.RoleId != id)
                 return BadRequest(new { message = "Invalid role data" });
 
             var existingRole = await _roleService.GetRoleByIdAsync(id);
@@ -72,7 +72,8 @@ namespace GymManagement.Controllers
             await _roleService.DeleteRoleAsync(id);
             return Ok(new { message = "Role deleted successfully" });
         }
-        // GET: api/role/login?email=...&password=...
+
+        // POST: api/role/login
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
@@ -83,15 +84,29 @@ namespace GymManagement.Controllers
             if (role == null)
                 return Unauthorized(new { message = "Invalid email or password" });
 
-            // Only return safe fields, not the password
             return Ok(new
             {
                 role.RoleId,
                 role.RoleName,
                 role.UserName,
-                role.UserEmail
+                role.UserEmail,
+                role.GymId,
+                role.GymName
             });
         }
 
+        // POST: api/role/bygym
+        [HttpPost("bygym")]
+        public async Task<IActionResult> FetchByGym([FromBody] gymidandname request)
+        {
+            if (request.GymId <= 0 || string.IsNullOrEmpty(request.GymName))
+                return BadRequest(new { message = "GymId and GymName are required" });
+
+            var role = await _roleService.GetRoleByGymIdAndNameAsync(request.GymId, request.GymName);
+            if (role == null)
+                return NotFound(new { message = "No role found for this gym" });
+
+            return Ok(role);
+        }
     }
 }

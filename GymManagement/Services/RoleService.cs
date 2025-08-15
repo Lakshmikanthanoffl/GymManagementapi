@@ -38,10 +38,16 @@ namespace GymManagement.Services
         {
             await _roleRepository.DeleteRoleAsync(roleId);
         }
+
         public async Task<Role?> GetRoleByEmailAndPasswordAsync(string email, string password)
         {
             return await _roleRepository.GetRoleByEmailAndPasswordAsync(email, password);
         }
 
+        // ✅ New method for fetching by GymId & GymName
+        public async Task<Role?> GetRoleByGymIdAndNameAsync(int gymId, string gymName)
+        {
+            return await _roleRepository.GetRoleByGymIdAndNameAsync(gymId, gymName);
+        }
     }
 }

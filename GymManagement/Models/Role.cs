@@ -26,10 +26,25 @@ namespace GymManagement.Models
         [Required]
         [MaxLength(255)]
         public string Password { get; set; } // ⚠️ Store hashed passwords in production!
+
+        // ✅ New Fields
+        [Required]
+        public int GymId { get; set; }
+
+        [Required]
+        [MaxLength(100)]
+        public string GymName { get; set; }
     }
+
     public class LoginRequest
     {
         public string Email { get; set; }
         public string Password { get; set; }
+    }
+
+    public class gymidandname
+    {
+        public int GymId { get; set; }
+        public string GymName { get; set; }
     }
 }
