@@ -31,7 +31,7 @@ namespace GymManagement.Models
         [Required]
         public int GymId { get; set; }
 
-        [Required]
+        
         [MaxLength(100)]
         public string GymName { get; set; }
     }
