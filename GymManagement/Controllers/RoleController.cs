@@ -57,9 +57,18 @@ namespace GymManagement.Controllers
             if (existingRole == null)
                 return NotFound(new { message = "Role not found" });
 
-            await _roleService.UpdateRoleAsync(role);
+            // ✅ Update properties manually
+            existingRole.RoleName = role.RoleName;
+            existingRole.UserName = role.UserName;
+            existingRole.UserEmail = role.UserEmail;
+            existingRole.Password = role.Password;
+            existingRole.GymId = role.GymId;
+            existingRole.GymName = role.GymName;
+
+            await _roleService.UpdateRoleAsync(existingRole);
             return Ok(new { message = "Role updated successfully" });
         }
+
 
         // DELETE: api/role/{id}
         [HttpDelete("{id}")]
