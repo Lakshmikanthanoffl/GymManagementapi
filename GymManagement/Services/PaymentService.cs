@@ -37,8 +37,10 @@ namespace GymManagement.Services
                 // Upload file
                 await bucket.Upload(tempPath, screenshotFile.FileName);
 
-                // Generate signed URL
-                screenshotUrl = await bucket.CreateSignedUrl(screenshotFile.FileName, 3600);
+                
+                int fiftyYearsInSeconds = 10 * 365 * 24 * 60 * 60;
+
+                screenshotUrl = await bucket.CreateSignedUrl(screenshotFile.FileName, fiftyYearsInSeconds);
 
                 // Delete temp file
                 File.Delete(tempPath);
@@ -57,6 +59,7 @@ namespace GymManagement.Services
 
             return await _repository.AddPaymentAsync(payment);
         }
+
 
 
         public async Task<List<Payment>> GetAllPaymentsAsync()
