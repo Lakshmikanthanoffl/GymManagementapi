@@ -7,17 +7,14 @@ namespace GymManagement.Data
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
-        {
-        }
+        { }
 
-        // Tables
-        public DbSet<Member> Members { get; set; } = null!;
-        public DbSet<Role> Roles { get; set; } = null!;
-
+        public DbSet<Payment> Payments { get; set; }
+        public DbSet<Member> Members { get; set; }
+        public DbSet<Role> Roles { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Store SubscriptionType as JSON in PostgreSQL
             modelBuilder.Entity<Member>()
                 .Property(m => m.SubscriptionType)
                 .HasColumnType("jsonb");

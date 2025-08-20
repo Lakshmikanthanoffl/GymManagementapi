@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc.NewtonsoftJson;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Serialization;
 using Npgsql;
+using Supabase;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,7 +20,7 @@ var database = Environment.GetEnvironmentVariable("PGDATABASE");
 var username = Environment.GetEnvironmentVariable("PGUSER");
 var password = Environment.GetEnvironmentVariable("PGPASSWORD");
 
-// Fallback raw connection string from appsettings.json (may contain placeholders)
+// Fallback raw connection string from appsettings.json
 var rawFallbackConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 string connectionString;
@@ -33,7 +34,6 @@ if (!string.IsNullOrWhiteSpace(host) &&
 }
 else if (!string.IsNullOrWhiteSpace(rawFallbackConnectionString))
 {
-    // Replace placeholders in fallback connection string with env vars (or empty if missing)
     connectionString = rawFallbackConnectionString
         .Replace("${PGHOST}", Environment.GetEnvironmentVariable("PGHOST") ?? "")
         .Replace("${PGDATABASE}", Environment.GetEnvironmentVariable("PGDATABASE") ?? "")
@@ -47,7 +47,7 @@ else
     throw new Exception("No valid connection string found. Please set environment variables or provide a fallback connection string.");
 }
 
-// Debug print environment variables (avoid printing password in production)
+// Debug print environment variables
 Console.WriteLine($"PGHOST='{host}'");
 Console.WriteLine($"PGDATABASE='{database}'");
 Console.WriteLine($"PGUSER='{username}'");
@@ -60,6 +60,13 @@ NpgsqlConnection.GlobalTypeMapper.EnableDynamicJson();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
 
+// ------------------- Supabase Client -------------------
+var supabaseUrl = builder.Configuration["Supabase:Url"];
+var supabaseKey = builder.Configuration["Supabase:ServiceRoleKey"];
+var supabaseClient = new Client(supabaseUrl, supabaseKey);
+await supabaseClient.InitializeAsync();
+builder.Services.AddSingleton(supabaseClient);
+
 // ------------------- Services Registration -------------------
 builder.Services.AddScoped<IMembersRepository, MembersRepository>();
 builder.Services.AddScoped<IMembersService, MembersService>();
@@ -67,6 +74,9 @@ builder.Services.AddScoped<IMembersService, MembersService>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<IRoleService, RoleService>();
 
+// ✅ Payment Service & Repository
+builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+builder.Services.AddScoped<IPaymentService, PaymentService>();
 
 // ------------------- CORS Policy -------------------
 builder.Services.AddCors(options =>
