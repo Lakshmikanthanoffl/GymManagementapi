@@ -14,9 +14,25 @@ namespace GymManagement.Services
             _roleRepository = roleRepository;
         }
 
+
         public async Task<IEnumerable<Role>> GetAllRolesAsync()
         {
-            return await _roleRepository.GetAllRolesAsync();
+            var roles = (await _roleRepository.GetAllRolesAsync()).ToList();
+            var today = DateTime.UtcNow;
+
+            bool updated = false;
+
+            foreach (var role in roles)
+            {
+                if (role.ValidUntil.HasValue && role.ValidUntil.Value < today && role.IsActive)
+                {
+                    role.IsActive = false; // auto deactivate expired roles
+                    await _roleRepository.UpdateRoleAsync(role);
+                    updated = true;
+                }
+            }
+
+            return roles;
         }
 
         public async Task<Role?> GetRoleByIdAsync(int roleId)

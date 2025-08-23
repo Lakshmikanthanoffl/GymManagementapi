@@ -37,10 +37,14 @@ namespace GymManagement.Controllers
 
         // POST: api/role
         [HttpPost]
-        public async Task<IActionResult> CreateRole(Role role)
+        public async Task<IActionResult> CreateRole([FromBody] Role role)
         {
             if (role == null)
                 return BadRequest(new { message = "Invalid role data" });
+
+            // Optional: Default values
+            role.IsActive = true;
+            role.PaidDate ??= System.DateTime.Now;
 
             await _roleService.AddRoleAsync(role);
             return Ok(new { message = "Role created successfully" });
@@ -48,7 +52,7 @@ namespace GymManagement.Controllers
 
         // PUT: api/role/{id}
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateRole(int id, Role role)
+        public async Task<IActionResult> UpdateRole(int id, [FromBody] Role role)
         {
             if (role == null || role.RoleId != id)
                 return BadRequest(new { message = "Invalid role data" });
@@ -57,18 +61,22 @@ namespace GymManagement.Controllers
             if (existingRole == null)
                 return NotFound(new { message = "Role not found" });
 
-            // ✅ Update properties manually
+            // Update all properties including new fields
             existingRole.RoleName = role.RoleName;
             existingRole.UserName = role.UserName;
             existingRole.UserEmail = role.UserEmail;
-            existingRole.Password = role.Password;
+            if (!string.IsNullOrEmpty(role.Password))
+                existingRole.Password = role.Password; // ⚠️ hash in production
             existingRole.GymId = role.GymId;
             existingRole.GymName = role.GymName;
+            existingRole.PaidDate = role.PaidDate;
+            existingRole.ValidUntil = role.ValidUntil;
+            existingRole.AmountPaid = role.AmountPaid;
+            existingRole.IsActive = role.IsActive;
 
             await _roleService.UpdateRoleAsync(existingRole);
             return Ok(new { message = "Role updated successfully" });
         }
-
 
         // DELETE: api/role/{id}
         [HttpDelete("{id}")]
@@ -93,6 +101,13 @@ namespace GymManagement.Controllers
             if (role == null)
                 return Unauthorized(new { message = "Invalid email or password" });
 
+            if (role.ValidUntil.HasValue && role.ValidUntil.Value < DateTime.UtcNow)
+            {
+                role.IsActive = false;
+                await _roleService.UpdateRoleAsync(role);
+                return Unauthorized(new { message = "Account expired. Please renew subscription." });
+            }
+
             return Ok(new
             {
                 role.RoleId,
@@ -100,9 +115,14 @@ namespace GymManagement.Controllers
                 role.UserName,
                 role.UserEmail,
                 role.GymId,
-                role.GymName
+                role.GymName,
+                role.PaidDate,
+                role.ValidUntil,
+                role.AmountPaid,
+                role.IsActive
             });
         }
+
 
         // POST: api/role/bygym
         [HttpPost("bygym")]

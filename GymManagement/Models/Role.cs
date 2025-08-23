@@ -34,12 +34,18 @@ namespace GymManagement.Models
         
         [MaxLength(100)]
         public string GymName { get; set; }
+
+        public DateTime? PaidDate { get; set; }
+        public DateTime? ValidUntil { get; set; }
+        public decimal? AmountPaid { get; set; }
+        public bool IsActive { get; set; } = true;
     }
 
     public class LoginRequest
     {
         public string Email { get; set; }
         public string Password { get; set; }
+
     }
 
     public class gymidandname
