@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json;
 
 namespace GymManagement.Models
 {
@@ -39,12 +41,20 @@ namespace GymManagement.Models
         public DateTime PaidDate { get; set; }
         public DateTime ValidUntil { get; set; }
 
-        // ✅ New fields for gym
+        // Gym info
         [Required]
         public int GymId { get; set; }
 
-        
         [MaxLength(100)]
         public string GymName { get; set; }
+
+        // ✅ Attendance tracking: store dates as JSON in PostgreSQL
+        [Column(TypeName = "jsonb")]
+        public List<string> Attendance { get; set; } = new List<string>();
     }
+    public class AttendanceRequest
+    {
+        public string Date { get; set; }  // match exactly "date" casing used in JSON
+    }
+
 }

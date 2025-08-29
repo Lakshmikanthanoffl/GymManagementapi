@@ -1,5 +1,7 @@
 ﻿using GymManagement.Interfaces;
 using GymManagement.Models;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace GymManagement.Services
 {
@@ -36,10 +38,23 @@ namespace GymManagement.Services
         {
             await _repository.DeleteAsync(id);
         }
-        // ✅ New method implementation
+
+        // ✅ Get members by Gym
         public async Task<IEnumerable<Member>> GetMembersByGymAsync(int gymId, string gymName)
         {
             return await _repository.GetMembersByGymAsync(gymId, gymName);
+        }
+
+        // ✅ Attendance methods
+
+        public async Task MarkAttendanceAsync(int memberId, string date)
+        {
+            await _repository.MarkAttendanceAsync(memberId, date);
+        }
+
+        public async Task<IEnumerable<string>> GetAttendanceAsync(int memberId)
+        {
+            return await _repository.GetAttendanceAsync(memberId);
         }
     }
 }

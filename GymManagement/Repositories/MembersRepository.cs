@@ -2,6 +2,9 @@
 using GymManagement.Interfaces;
 using GymManagement.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace GymManagement.Repositories
 {
@@ -45,12 +48,37 @@ namespace GymManagement.Repositories
                 await _context.SaveChangesAsync();
             }
         }
-        // ✅ New method implementation
+
+        // ✅ Get members by GymId and GymName
         public async Task<IEnumerable<Member>> GetMembersByGymAsync(int gymId, string gymName)
         {
             return await _context.Members
                 .Where(m => m.GymId == gymId && m.GymName == gymName)
                 .ToListAsync();
+        }
+
+        // ✅ Mark attendance for a member
+        public async Task MarkAttendanceAsync(int memberId, string date)
+        {
+            var member = await _context.Members.FindAsync(memberId);
+            if (member != null)
+            {
+                if (member.Attendance == null)
+                    member.Attendance = new List<string>();
+
+                if (!member.Attendance.Contains(date))
+                    member.Attendance.Add(date);
+
+                _context.Members.Update(member);
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        // ✅ Get attendance dates for a member
+        public async Task<IEnumerable<string>> GetAttendanceAsync(int memberId)
+        {
+            var member = await _context.Members.FindAsync(memberId);
+            return member?.Attendance ?? new List<string>();
         }
     }
 }
