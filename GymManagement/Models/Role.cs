@@ -39,6 +39,10 @@ namespace GymManagement.Models
         public DateTime? ValidUntil { get; set; }
         public decimal? AmountPaid { get; set; }
         public bool IsActive { get; set; } = true;
+
+        public List<string> Privileges { get; set; } = new();
+
+
     }
 
     public class LoginRequest

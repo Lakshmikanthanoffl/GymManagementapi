@@ -42,9 +42,11 @@ namespace GymManagement.Controllers
             if (role == null)
                 return BadRequest(new { message = "Invalid role data" });
 
-            // Optional: Default values
             role.IsActive = true;
-            role.PaidDate ??= System.DateTime.Now;
+            role.PaidDate ??= DateTime.Now;
+
+            // ✅ Ensure privileges is not null
+            role.Privileges ??= new List<string>();
 
             await _roleService.AddRoleAsync(role);
             return Ok(new { message = "Role created successfully" });
@@ -61,18 +63,20 @@ namespace GymManagement.Controllers
             if (existingRole == null)
                 return NotFound(new { message = "Role not found" });
 
-            // Update all properties including new fields
             existingRole.RoleName = role.RoleName;
             existingRole.UserName = role.UserName;
             existingRole.UserEmail = role.UserEmail;
             if (!string.IsNullOrEmpty(role.Password))
-                existingRole.Password = role.Password; // ⚠️ hash in production
+                existingRole.Password = role.Password; // ⚠️ hash in prod
             existingRole.GymId = role.GymId;
             existingRole.GymName = role.GymName;
             existingRole.PaidDate = role.PaidDate;
             existingRole.ValidUntil = role.ValidUntil;
             existingRole.AmountPaid = role.AmountPaid;
             existingRole.IsActive = role.IsActive;
+
+            // ✅ Save privileges too
+            existingRole.Privileges = role.Privileges ?? new List<string>();
 
             await _roleService.UpdateRoleAsync(existingRole);
             return Ok(new { message = "Role updated successfully" });
@@ -119,7 +123,8 @@ namespace GymManagement.Controllers
                 role.PaidDate,
                 role.ValidUntil,
                 role.AmountPaid,
-                role.IsActive
+                role.IsActive,
+                role.Privileges // ✅ send menus
             });
         }
 
