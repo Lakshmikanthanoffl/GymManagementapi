@@ -9,8 +9,8 @@ using System.Text;
 [Route("api/[controller]")]
 public class PaymentController : ControllerBase
 {
-    private readonly string key = "rzp_test_RGGtv2W1TjYURz";      // Razorpay Key ID
-    private readonly string secret = "Z4jDY56CFmhM73Ol2qTdDe5H";   // Razorpay Secret Key
+    private readonly string key = "rzp_live_RIIy4KDqcIQPqh";      // Razorpay Key ID
+    private readonly string secret = "If9sUD1c76NoJCbobRdZJt20";   // Razorpay Secret Key
 
     // ✅ Create Razorpay Order
     [HttpPost("create-order")]
