@@ -57,6 +57,13 @@ namespace GymManagement.Repositories
             return await _context.Roles
                 .FirstOrDefaultAsync(r => r.GymId == gymId && r.GymName == gymName);
         }
+        // ✅ New method: fetch all roles for a given UserEmail
+        public async Task<IEnumerable<Role>> GetRolesByEmailAsync(string email)
+        {
+            return await _context.Roles
+                .Where(r => r.UserEmail == email)
+                .ToListAsync();
+        }
 
     }
 }

@@ -65,5 +65,11 @@ namespace GymManagement.Services
         {
             return await _roleRepository.GetRoleByGymIdAndNameAsync(gymId, gymName);
         }
+
+        // ✅ New method: Fetch all roles by UserEmail
+        public async Task<IEnumerable<Role>> GetRolesByEmailAsync(string email)
+        {
+            return await _roleRepository.GetRolesByEmailAsync(email);
+        }
     }
 }

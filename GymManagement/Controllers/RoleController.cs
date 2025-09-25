@@ -35,6 +35,17 @@ namespace GymManagement.Controllers
             return Ok(role);
         }
 
+        // ✅ GET: api/role/email/{email}
+        [HttpGet("email/{email}")]
+        public async Task<IActionResult> GetRolesByEmail(string email)
+        {
+            var roles = await _roleService.GetRolesByEmailAsync(email);
+            if (roles == null || !roles.Any())
+                return NotFound(new { message = "No roles found for this email" });
+
+            return Ok(roles);
+        }
+
         // POST: api/role
         [HttpPost]
         public async Task<IActionResult> CreateRole([FromBody] Role role)

@@ -15,5 +15,8 @@ namespace GymManagement.Interfaces
 
         // ✅ New method for fetching by GymId & GymName
         Task<Role?> GetRoleByGymIdAndNameAsync(int gymId, string gymName);
+
+        // ✅ New method: Fetch all roles by UserEmail
+        Task<IEnumerable<Role>> GetRolesByEmailAsync(string email);
     }
 }

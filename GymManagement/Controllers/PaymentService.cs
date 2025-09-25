@@ -10,8 +10,8 @@ using System.Text;
 [Route("api/[controller]")]
 public class PaymentController : ControllerBase
 {
-    private readonly string key = "rzp_live_RIIy4KDqcIQPqh";      // Razorpay Key ID
-    private readonly string secret = "If9sUD1c76NoJCbobRdZJt20"; // Razorpay Secret Key
+    private readonly string key = "rzp_test_RIYosIVFWWyoSn";      // Razorpay Key ID
+    private readonly string secret = "mHlGfXgXSjjhZ5zAYll35XY2"; // Razorpay Secret Key
     private readonly IRoleRepository _roleRepository;
 
     public PaymentController(IRoleRepository roleRepository)
@@ -75,7 +75,7 @@ public class PaymentController : ControllerBase
                     // Extend subscription
                     switch (data.PlanName)
                     {
-                        case "Monthly":
+                        case "Month":
                             role.ValidUntil = role.ValidUntil != null && role.ValidUntil > DateTime.UtcNow
                                 ? role.ValidUntil.Value.ToUniversalTime().AddMonths(1)
                                 : DateTime.UtcNow.AddMonths(1);
@@ -87,7 +87,7 @@ public class PaymentController : ControllerBase
                                 : DateTime.UtcNow.AddMonths(3);
                             break;
 
-                        case "Yearly":
+                        case "Year":
                             role.ValidUntil = role.ValidUntil != null && role.ValidUntil > DateTime.UtcNow
                                 ? role.ValidUntil.Value.ToUniversalTime().AddYears(1)
                                 : DateTime.UtcNow.AddYears(1);
@@ -100,6 +100,13 @@ public class PaymentController : ControllerBase
 
                     role.AmountPaid = data.Amount;
                     role.IsActive = true;
+                    
+                    // ✅ Update privileges
+                    if (data.Privileges != null && data.Privileges.Count > 0)
+                    {
+                        role.Privileges = data.Privileges; // already exists in DB
+                    }
+
 
                     await _roleRepository.UpdateRoleAsync(role);
                 }
@@ -145,4 +152,6 @@ public class RazorpayPaymentRequest
     public int RoleId { get; set; }        // Role/User to update
     public decimal Amount { get; set; }    // Amount paid
     public string PlanName { get; set; }   // Subscription Plan: Monthly, 3 Months, Yearly
+
+    public List<string> Privileges { get; set; }
 }
