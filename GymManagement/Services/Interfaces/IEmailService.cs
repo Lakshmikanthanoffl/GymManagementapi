@@ -16,8 +16,8 @@ namespace GymManagement.Interfaces
             string planName,
             string subscriptionPeriod,
             decimal amount,
-            DateTime paidDate
-            //byte[] invoiceBytes
+            DateTime paidDate,
+            byte[] invoiceBytes
         );
     }
 }

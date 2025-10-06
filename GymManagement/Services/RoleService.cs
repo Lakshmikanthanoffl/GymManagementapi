@@ -61,17 +61,17 @@ namespace GymManagement.Services
             //    role.SubscriptionPeriod
             //);
 
-            // 3️⃣ Send email with PDF attached using professional template
-            await _emailService.SendSubscriptionInvoiceAsync(
-                to: role.UserEmail,
-                userName: role.UserName,
-                gymName: role.GymName,
-                planName: role.PlanName,
-                subscriptionPeriod: role.SubscriptionPeriod,
-                amount: role.AmountPaid ?? 0,
-                paidDate: role.PaidDate ?? DateTime.Now
-                //invoiceBytes: invoicePdf
-            );
+            //// 3️⃣ Send email with PDF attached using professional template
+            //await _emailService.SendSubscriptionInvoiceAsync(
+            //    to: role.UserEmail,
+            //    userName: role.UserName,
+            //    gymName: role.GymName,
+            //    planName: role.PlanName,
+            //    subscriptionPeriod: role.SubscriptionPeriod,
+            //    amount: role.AmountPaid ?? 0,
+            //    paidDate: role.PaidDate ?? DateTime.Now,
+            //    invoiceBytes: invoicePdf
+            //);
         }
 
         public async Task UpdateRoleAsync(Role role)
