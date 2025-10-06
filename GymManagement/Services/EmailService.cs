@@ -147,8 +147,8 @@ namespace GymManagement.Services
             string planName,
             string subscriptionPeriod,
             decimal amount,
-            DateTime paidDate,
-            byte[] invoiceBytes
+            DateTime paidDate
+            //byte[] invoiceBytes
             
         )
         {
@@ -168,9 +168,9 @@ namespace GymManagement.Services
             await SendEmailAsync(
                 to,
                 "Your Subscription Invoice – Zyct Technology",
-                emailBody,
-                invoiceBytes,
-                "Invoice.pdf"
+                emailBody
+                //invoiceBytes,
+                //"Invoice.pdf"
             );
         }
     }

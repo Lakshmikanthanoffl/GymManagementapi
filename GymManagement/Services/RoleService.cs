@@ -50,16 +50,16 @@ namespace GymManagement.Services
         {
             await _roleRepository.AddRoleAsync(role);
 
-            /// 2️⃣ Generate the professional invoice PDF
-            var invoicePdf = await _invoiceService.GenerateInvoicePdfAsync(
-                role.UserName,
-                role.UserEmail,
-                role.GymName,
-                role.PlanName,
-                role.AmountPaid ?? 0,
-                role.PaidDate ?? DateTime.Now,
-                role.SubscriptionPeriod
-            );
+            ///// 2️⃣ Generate the professional invoice PDF
+            //var invoicePdf = await _invoiceService.GenerateInvoicePdfAsync(
+            //    role.UserName,
+            //    role.UserEmail,
+            //    role.GymName,
+            //    role.PlanName,
+            //    role.AmountPaid ?? 0,
+            //    role.PaidDate ?? DateTime.Now,
+            //    role.SubscriptionPeriod
+            //);
 
             // 3️⃣ Send email with PDF attached using professional template
             await _emailService.SendSubscriptionInvoiceAsync(
@@ -69,8 +69,8 @@ namespace GymManagement.Services
                 planName: role.PlanName,
                 subscriptionPeriod: role.SubscriptionPeriod,
                 amount: role.AmountPaid ?? 0,
-                paidDate: role.PaidDate ?? DateTime.Now,
-                invoiceBytes: invoicePdf
+                paidDate: role.PaidDate ?? DateTime.Now
+                //invoiceBytes: invoicePdf
             );
         }
 
