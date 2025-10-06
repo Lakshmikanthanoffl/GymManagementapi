@@ -148,7 +148,7 @@ namespace GymManagement.Services
             string subscriptionPeriod,
             decimal amount,
             DateTime paidDate,
-            byte[] invoiceBytes,
+            byte[] invoiceBytes
             
         )
         {
