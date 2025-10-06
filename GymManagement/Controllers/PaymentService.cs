@@ -106,27 +106,23 @@ public class PaymentController : ControllerBase
             SubscriptionPlan matchedPlan = null;
             string subscriptionPeriod = "Month";
 
-            foreach (var p in subscriptionPlans)
+            // Build dictionary only ONCE (maybe at startup or after fetching plans)
+            var priceToPlanMap = subscriptionPlans
+                .SelectMany(p => new[]
+                {
+        new { Amount = p.Monthly, Plan = p, Period = "Month" },
+        new { Amount = p.Quarterly, Plan = p, Period = "3 Months" },
+        new { Amount = p.Yearly, Plan = p, Period = "Year" }
+                })
+                .ToDictionary(x => x.Amount, x => (x.Plan, x.Period));
+
+            // ✅ Now lookup is instant
+            if (priceToPlanMap.TryGetValue((int)data.Amount, out var result))
             {
-                if (p.Monthly == (int)data.Amount)
-                {
-                    matchedPlan = p;
-                    subscriptionPeriod = "Month";
-                    break;
-                }
-                else if (p.Quarterly == (int)data.Amount)
-                {
-                    matchedPlan = p;
-                    subscriptionPeriod = "3 Months";
-                    break;
-                }
-                else if (p.Yearly == (int)data.Amount)
-                {
-                    matchedPlan = p;
-                    subscriptionPeriod = "Year";
-                    break;
-                }
+                matchedPlan = result.Plan;
+                subscriptionPeriod = result.Period;
             }
+
 
             // Fallback if no match
             matchedPlan ??= subscriptionPlans.First();
@@ -157,37 +153,38 @@ public class PaymentController : ControllerBase
 
             await _roleRepository.UpdateRoleAsync(role);
 
-            // 4️⃣ Generate invoice PDF (optional)
-            byte[] invoicePdf = null;
-            if (_invoiceService != null)
-            {
-                invoicePdf = await _invoiceService.GenerateInvoicePdfAsync(
-                    role.UserName,
-                    role.UserEmail,
-                    role.GymName,
-                    role.PlanName,
-                    role.AmountPaid ?? 0,
-                    role.PaidDate ?? DateTime.UtcNow,
-                    role.SubscriptionPeriod
-                );
-            }
+            //// 4️⃣ Generate invoice PDF (optional)
+            //byte[] invoicePdf = null;
+            //if (_invoiceService != null)
+            //{
+            //    invoicePdf = await _invoiceService.GenerateInvoicePdfAsync(
+            //        role.UserName,
+            //        role.UserEmail,
+            //        role.GymName,
+            //        role.PlanName,
+            //        role.AmountPaid ?? 0,
+            //        role.PaidDate ?? DateTime.UtcNow,
+            //        role.SubscriptionPeriod
+            //    );
+            //}
 
             // 5️⃣ Send email to user
             if (_emailService != null)
             {
-                await _emailService.SendSubscriptionInvoiceAsync(
-                    to: role.UserEmail,
-                    userName: role.UserName,
-                    gymName: role.GymName,
-                    planName: role.PlanName,
-                    subscriptionPeriod: role.SubscriptionPeriod,
-                    amount: role.AmountPaid ?? 0,
-                    paidDate: role.PaidDate ?? DateTime.UtcNow,
-                    invoiceBytes: invoicePdf
-                );
+                //await _emailService.SendSubscriptionInvoiceAsync(
+                //    to: role.UserEmail,
+                //    userName: role.UserName,
+                //    gymName: role.GymName,
+                //    planName: role.PlanName,
+                //    subscriptionPeriod: role.SubscriptionPeriod,
+                //    amount: role.AmountPaid ?? 0,
+                //    paidDate: role.PaidDate ?? DateTime.UtcNow
+                    
+                //);
 
                 // 6️⃣ Send notification to CEO
                 var ceoBody = $@"
+<pre>
 Hello CEO,
 
 A new payment has been successfully completed.
@@ -201,15 +198,13 @@ Details:
 - Paid Date (UTC): {role.PaidDate?.ToString("yyyy-MM-dd HH:mm:ss") ?? DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss")}
 
 Regards,
-Zyct Payment System
+Zyct Payment System</pre>
 ";
 
                 await _emailService.SendEmailAsync(
                     to: "zyct.official@gmail.com",
                     subject: $"Payment Received from {role.UserName ?? "Unknown User"}",
-                    body: ceoBody,
-                    attachment: invoicePdf,
-                    attachmentName: "Invoice.pdf"
+                    body: ceoBody
                 );
             }
 
