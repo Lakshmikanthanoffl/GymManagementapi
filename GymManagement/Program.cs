@@ -7,6 +7,9 @@ using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Serialization;
 using Npgsql;
 using Supabase;
+using GymManagement.Interfaces;
+using GymManagement.Services;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -77,6 +80,11 @@ builder.Services.AddScoped<IRoleService, RoleService>();
 // ✅ Payment Service & Repository
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
+builder.Services.AddScoped<IInvoiceService, InvoiceService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+// ------------------- IHttpClientFactory -------------------
+// Add this line to fix PaymentController injection error
+builder.Services.AddHttpClient();
 
 // ------------------- CORS Policy -------------------
 builder.Services.AddCors(options =>

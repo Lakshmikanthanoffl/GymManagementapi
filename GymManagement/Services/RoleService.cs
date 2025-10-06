@@ -1,6 +1,8 @@
 ﻿using GymManagement.Interfaces;
 using GymManagement.Models;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace GymManagement.Services
@@ -8,19 +10,23 @@ namespace GymManagement.Services
     public class RoleService : IRoleService
     {
         private readonly IRoleRepository _roleRepository;
+        private readonly IInvoiceService _invoiceService; // use interface
+        private readonly IEmailService _emailService;     // use interface
 
-        public RoleService(IRoleRepository roleRepository)
+        public RoleService(
+            IRoleRepository roleRepository,
+            IInvoiceService invoiceService,
+            IEmailService emailService)
         {
             _roleRepository = roleRepository;
+            _invoiceService = invoiceService;
+            _emailService = emailService;
         }
-
 
         public async Task<IEnumerable<Role>> GetAllRolesAsync()
         {
             var roles = (await _roleRepository.GetAllRolesAsync()).ToList();
             var today = DateTime.UtcNow;
-
-            bool updated = false;
 
             foreach (var role in roles)
             {
@@ -28,7 +34,6 @@ namespace GymManagement.Services
                 {
                     role.IsActive = false; // auto deactivate expired roles
                     await _roleRepository.UpdateRoleAsync(role);
-                    updated = true;
                 }
             }
 
@@ -40,9 +45,33 @@ namespace GymManagement.Services
             return await _roleRepository.GetRoleByIdAsync(roleId);
         }
 
+        // Add role + generate invoice + send email
         public async Task AddRoleAsync(Role role)
         {
             await _roleRepository.AddRoleAsync(role);
+
+            /// 2️⃣ Generate the professional invoice PDF
+            var invoicePdf = await _invoiceService.GenerateInvoicePdfAsync(
+                role.UserName,
+                role.UserEmail,
+                role.GymName,
+                role.PlanName,
+                role.AmountPaid ?? 0,
+                role.PaidDate ?? DateTime.Now,
+                role.SubscriptionPeriod
+            );
+
+            // 3️⃣ Send email with PDF attached using professional template
+            await _emailService.SendSubscriptionInvoiceAsync(
+                to: role.UserEmail,
+                userName: role.UserName,
+                gymName: role.GymName,
+                planName: role.PlanName,
+                subscriptionPeriod: role.SubscriptionPeriod,
+                amount: role.AmountPaid ?? 0,
+                paidDate: role.PaidDate ?? DateTime.Now,
+                invoiceBytes: invoicePdf
+            );
         }
 
         public async Task UpdateRoleAsync(Role role)
@@ -60,13 +89,11 @@ namespace GymManagement.Services
             return await _roleRepository.GetRoleByEmailAndPasswordAsync(email, password);
         }
 
-        // ✅ New method for fetching by GymId & GymName
         public async Task<Role?> GetRoleByGymIdAndNameAsync(int gymId, string gymName)
         {
             return await _roleRepository.GetRoleByGymIdAndNameAsync(gymId, gymName);
         }
 
-        // ✅ New method: Fetch all roles by UserEmail
         public async Task<IEnumerable<Role>> GetRolesByEmailAsync(string email)
         {
             return await _roleRepository.GetRolesByEmailAsync(email);

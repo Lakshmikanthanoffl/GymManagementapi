@@ -42,4 +42,5 @@ namespace GymManagement.Models
         public int GymId { get; set; }
         public string GymName { get; set; }
     }
+   
 }

@@ -42,7 +42,12 @@ namespace GymManagement.Models
 
         public List<string> Privileges { get; set; } = new();
 
+        [Column("plan")]
+        public string PlanName { get; set; }
 
+
+        [MaxLength(50)]
+        public string SubscriptionPeriod { get; set; } = "Monthly";
     }
 
     public class LoginRequest
