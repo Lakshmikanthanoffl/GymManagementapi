@@ -50,32 +50,29 @@ namespace GymManagement.Services
         {
             await _roleRepository.AddRoleAsync(role);
 
-            // Fire and forget (background task for PDF + Email)
-            _ = Task.Run(async () =>
-            {
-                var invoicePdf = await _invoiceService.GenerateInvoicePdfAsync(
-                    role.UserName,
-                    role.UserEmail,
-                    role.GymName,
-                    role.PlanName,
-                    role.AmountPaid ?? 0,
-                    role.PaidDate ?? DateTime.Now,
-                    role.SubscriptionPeriod
-                );
+            /// 2️⃣ Generate the professional invoice PDF
+            var invoicePdf = await _invoiceService.GenerateInvoicePdfAsync(
+                role.UserName,
+                role.UserEmail,
+                role.GymName,
+                role.PlanName,
+                role.AmountPaid ?? 0,
+                role.PaidDate ?? DateTime.Now,
+                role.SubscriptionPeriod
+            );
 
-                await _emailService.SendSubscriptionInvoiceAsync(
-                    to: role.UserEmail,
-                    userName: role.UserName,
-                    gymName: role.GymName,
-                    planName: role.PlanName,
-                    subscriptionPeriod: role.SubscriptionPeriod,
-                    amount: role.AmountPaid ?? 0,
-                    paidDate: role.PaidDate ?? DateTime.Now,
-                    invoiceBytes: invoicePdf
-                );
-            });
+            // 3️⃣ Send email with PDF attached using professional template
+            await _emailService.SendSubscriptionInvoiceAsync(
+                to: role.UserEmail,
+                userName: role.UserName,
+                gymName: role.GymName,
+                planName: role.PlanName,
+                subscriptionPeriod: role.SubscriptionPeriod,
+                amount: role.AmountPaid ?? 0,
+                paidDate: role.PaidDate ?? DateTime.Now,
+                invoiceBytes: invoicePdf
+            );
         }
-
 
         public async Task UpdateRoleAsync(Role role)
         {
