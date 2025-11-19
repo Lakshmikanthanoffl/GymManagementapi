@@ -63,16 +63,13 @@ namespace GymManagement.Services
         public async Task SendQrEmailAsync(string username, string gymName, string gymUserEmail, string toEmail, string qrUrl)
         {
             using var httpClient = new HttpClient();
-            Console.WriteLine("Downloading QR started...");
             var qrBytes = await httpClient.GetByteArrayAsync(qrUrl);
-            Console.WriteLine("Downloading QR finished");
-
             using var stream = new MemoryStream(qrBytes);
 
             var message = new MimeMessage();
 
             // FROM: Gym email but professionally branded
-            message.From.Add(new MailboxAddress($"{gymName} | Zyct", gymUserEmail));
+            message.From.Add(new MailboxAddress($"{gymName} | Zyct", "9bf73e001@smtp-brevo.com"));
 
             // TO: Member email
             message.To.Add(new MailboxAddress(username, toEmail));
@@ -98,7 +95,7 @@ namespace GymManagement.Services
             <hr style='margin-top:25px; border:none; border-top:1px solid #ddd;' />
 
             <p style='font-size:12px; color:#666;'>
-                This email was securely sent via <strong>Zyct Technologies</strong> –  
+                This email was securely sent via <strong>Zyct</strong> –  
                 Membership Management & Automation Platform.
             </p>
         </div>
