@@ -60,48 +60,59 @@ namespace GymManagement.Services
             return await _repository.GetAttendanceAsync(memberId);
         }
 
-        public async Task SendQrEmailAsync(string username, string gymName, string gymUserEmail, string toEmail, string qrUrl)
+        public async Task SendQrEmailAsync(
+    string username,
+    string gymName,
+    string gymUserEmail,
+    string toEmail,
+    string qrUrl)
         {
-            using var httpClient = new HttpClient();
-            var qrBytes = await httpClient.GetByteArrayAsync(qrUrl);
-            using var stream = new MemoryStream(qrBytes);
-
-            var message = new MimeMessage();
-
-            // FROM: Gym email but professionally branded
-            message.From.Add(new MailboxAddress($"{gymName} | Zyct", "9bf73e001@smtp-brevo.com"));
-
-            // TO: Member email
-            message.To.Add(new MailboxAddress(username, toEmail));
-
-            message.Subject = $"Your Membership QR Code – {gymName}";
-
-            var body = new BodyBuilder
+            try
             {
-                HtmlBody = $@"
-        <div style='font-family: Arial, sans-serif; font-size:14px; color:#333;'>
-            <p>Dear <strong>{username}</strong>,</p>
+                Console.WriteLine("QR Download started: " + qrUrl);
 
-            <p>Thank you for being a valued member of <strong>{gymName}</strong>.</p>
+                using var httpClient = new HttpClient();
+                var qrBytes = await httpClient.GetByteArrayAsync(qrUrl);
+                Console.WriteLine("QR Download finished");
 
-            <p>Your membership QR code is attached to this email.  
-            Please use this QR for check-in, verification and member services.</p>
+                using var stream = new MemoryStream(qrBytes);
 
-            <br>
+                var message = new MimeMessage();
 
-            <p>Regards,<br>
-            <strong>{gymName}</strong></p>
+                // IMPORTANT: Sender must match Brevo authenticated email
+                message.From.Add(new MailboxAddress($"{gymName} | Zyct", "9bf73e001@smtp-brevo.com"));
 
-            <hr style='margin-top:25px; border:none; border-top:1px solid #ddd;' />
+                // Receiver (member)
+                message.To.Add(new MailboxAddress(username, toEmail));
 
-            <p style='font-size:12px; color:#666;'>
-                This email was securely sent via <strong>Zyct</strong> –  
-                Membership Management & Automation Platform.
-            </p>
-        </div>
-        ",
+                message.Subject = $"Your Membership QR Code – {gymName}";
 
-                TextBody = $@"
+                var body = new BodyBuilder
+                {
+                    HtmlBody = $@"
+                <div style='font-family: Arial, sans-serif; font-size:14px; color:#eee; background:#1a1a1a; padding:20px; border-radius:8px;'>
+                    <p>Dear <strong>{username}</strong>,</p>
+
+                    <p>Thank you for being a valued member of <strong>{gymName}</strong>.</p>
+
+                    <p>Your membership QR code is attached to this email.  
+                    Please use this QR for check-in, verification and member services.</p>
+
+                    <br>
+
+                    <p>Regards,<br>
+                    <strong>{gymName}</strong></p>
+
+                    <hr style='margin-top:25px; border:none; border-top:1px solid #444;' />
+
+                    <p style='font-size:12px; color:#aaa;'>
+                        This email was securely sent via <strong>Zyct</strong> –  
+                        Membership Management & Automation Platform.
+                    </p>
+                </div>
+            ",
+
+                    TextBody = $@"
 Dear {username},
 
 Your membership QR code is attached.
@@ -113,29 +124,41 @@ Regards,
 ---
 Powered by Zyct – Membership Automation Platform
 "
-            };
+                };
 
-            // Attach QR as image
-            // Dynamic file name (username + gym name)
-            string fileName = $"{username}_{gymName}_QR.png".Replace(" ", "_");
+                string fileName = $"{username}_{gymName}_QR.png".Replace(" ", "_");
+                body.Attachments.Add(fileName, stream);
 
-            // Attach QR
-            body.Attachments.Add(fileName, stream);
+                message.Body = body.ToMessageBody();
 
+                using var smtp = new MailKit.Net.Smtp.SmtpClient();
 
-            message.Body = body.ToMessageBody();
+                Console.WriteLine("Connecting to Brevo SMTP...");
 
-            using var smtp = new MailKit.Net.Smtp.SmtpClient();
+                await smtp.ConnectAsync("smtp-relay.brevo.com", 587, MailKit.Security.SecureSocketOptions.StartTls);
 
-            // Brevo SMTP
-            await smtp.ConnectAsync("smtp-relay.brevo.com", 587, MailKit.Security.SecureSocketOptions.StartTls);
+                Console.WriteLine("SMTP Connected. Authenticating...");
 
-            // Use Brevo login + Brevo SMTP Password (API key)
-            await smtp.AuthenticateAsync("9bf73e001@smtp-brevo.com", "RWrKJ15yvbafhFVN");
+                await smtp.AuthenticateAsync("9bf73e001@smtp-brevo.com", "RWrKJ15yvbafhFVN");
 
-            await smtp.SendAsync(message);
-            await smtp.DisconnectAsync(true);
+                Console.WriteLine("Authentication successful. Sending email...");
+
+                await smtp.SendAsync(message);
+
+                Console.WriteLine("Email sent successfully!");
+
+                await smtp.DisconnectAsync(true);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("ERROR while sending email:");
+                Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.StackTrace);
+
+                throw; // send proper error to frontend
+            }
         }
+
 
 
 
