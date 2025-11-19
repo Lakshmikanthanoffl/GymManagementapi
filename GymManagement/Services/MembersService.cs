@@ -69,7 +69,7 @@ namespace GymManagement.Services
             var message = new MimeMessage();
 
             // FROM: Gym email but professionally branded
-            message.From.Add(new MailboxAddress($"{gymName} | Zyct Technologies", gymUserEmail));
+            message.From.Add(new MailboxAddress($"{gymName} | Zyct", gymUserEmail));
 
             // TO: Member email
             message.To.Add(new MailboxAddress(username, toEmail));
@@ -111,7 +111,7 @@ Regards,
 {gymName}
 
 ---
-Powered by Zyct Technologies – Membership Automation Platform
+Powered by Zyct – Membership Automation Platform
 "
             };
 
@@ -127,11 +127,11 @@ Powered by Zyct Technologies – Membership Automation Platform
 
             using var smtp = new MailKit.Net.Smtp.SmtpClient();
 
-            await smtp.ConnectAsync("smtp.gmail.com", 465, true);
+            // Brevo SMTP
+            await smtp.ConnectAsync("smtp-relay.brevo.com", 587, MailKit.Security.SecureSocketOptions.StartTls);
 
-
-            // Authenticate with Zyct official email
-            await smtp.AuthenticateAsync("zyct.official@gmail.com", "sprgmexakzwwzuho");
+            // Use Brevo login + Brevo SMTP Password (API key)
+            await smtp.AuthenticateAsync("9bf73e001@smtp-brevo.com", "RWrKJ15yvbafhFVN");
 
             await smtp.SendAsync(message);
             await smtp.DisconnectAsync(true);
