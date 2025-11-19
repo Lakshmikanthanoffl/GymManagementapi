@@ -69,95 +69,68 @@ namespace GymManagement.Services
         {
             try
             {
-                Console.WriteLine("QR Download started: " + qrUrl);
-
+                // 1️⃣ Download QR
                 using var httpClient = new HttpClient();
                 var qrBytes = await httpClient.GetByteArrayAsync(qrUrl);
-                Console.WriteLine("QR Download finished");
-
                 using var stream = new MemoryStream(qrBytes);
 
+                // 2️⃣ Build Email
                 var message = new MimeMessage();
 
-                // IMPORTANT: Sender must match Brevo authenticated email
-                message.From.Add(new MailboxAddress($"{gymName} | Zyct", "9bf73e001@smtp-brevo.com"));
+                // Sender → MUST be Gmail App password email stored in Render env
+                message.From.Add(new MailboxAddress($"{gymName} | Zyct Technologies",
+                    Environment.GetEnvironmentVariable("EMAIL_USER")));
 
-                // Receiver (member)
+                // Receiver
                 message.To.Add(new MailboxAddress(username, toEmail));
-
                 message.Subject = $"Your Membership QR Code – {gymName}";
 
                 var body = new BodyBuilder
                 {
                     HtmlBody = $@"
-                <div style='font-family: Arial, sans-serif; font-size:14px; color:#eee; background:#1a1a1a; padding:20px; border-radius:8px;'>
-                    <p>Dear <strong>{username}</strong>,</p>
-
-                    <p>Thank you for being a valued member of <strong>{gymName}</strong>.</p>
-
-                    <p>Your membership QR code is attached to this email.  
-                    Please use this QR for check-in, verification and member services.</p>
-
-                    <br>
-
-                    <p>Regards,<br>
-                    <strong>{gymName}</strong></p>
-
-                    <hr style='margin-top:25px; border:none; border-top:1px solid #444;' />
-
-                    <p style='font-size:12px; color:#aaa;'>
-                        This email was securely sent via <strong>Zyct</strong> –  
-                        Membership Management & Automation Platform.
-                    </p>
-                </div>
+            <div style='font-family: Arial; font-size:14px;'>
+                <p>Dear <strong>{username}</strong>,</p>
+                <p>Your membership QR code is attached.</p>
+                <p>Regards,<br><strong>{gymName}</strong></p>
+            </div>
             ",
-
-                    TextBody = $@"
-Dear {username},
-
-Your membership QR code is attached.
-Thank you for being a part of {gymName}.
-
-Regards,
-{gymName}
-
----
-Powered by Zyct – Membership Automation Platform
-"
+                    TextBody = $"Dear {username}, your QR code is attached."
                 };
 
+                // 3️⃣ Attach QR file
                 string fileName = $"{username}_{gymName}_QR.png".Replace(" ", "_");
                 body.Attachments.Add(fileName, stream);
-
                 message.Body = body.ToMessageBody();
 
+                // 4️⃣ SMTP
                 using var smtp = new MailKit.Net.Smtp.SmtpClient();
 
-                Console.WriteLine("Connecting to Brevo SMTP...");
+                // Render fix — ignore certificate issues
+                smtp.ServerCertificateValidationCallback = (s, c, h, e) => true;
 
-                await smtp.ConnectAsync("smtp-relay.brevo.com", 587, MailKit.Security.SecureSocketOptions.StartTls);
+                // Connect Gmail SMTP
+                await smtp.ConnectAsync("smtp.gmail.com", 587, MailKit.Security.SecureSocketOptions.StartTls);
 
-                Console.WriteLine("SMTP Connected. Authenticating...");
+                // Authenticate using Render environment variables
+                await smtp.AuthenticateAsync(
+                    Environment.GetEnvironmentVariable("EMAIL_USER"),
+                    Environment.GetEnvironmentVariable("EMAIL_PASS")
+                );
 
-                await smtp.AuthenticateAsync("9bf73e001@smtp-brevo.com", "RWrKJ15yvbafhFVN");
-
-                Console.WriteLine("Authentication successful. Sending email...");
-
+                // Send email
                 await smtp.SendAsync(message);
 
-                Console.WriteLine("Email sent successfully!");
-
+                // Disconnect
                 await smtp.DisconnectAsync(true);
             }
             catch (Exception ex)
             {
-                Console.WriteLine("ERROR while sending email:");
-                Console.WriteLine(ex.Message);
+                Console.WriteLine("EMAIL ERROR: " + ex.Message);
                 Console.WriteLine(ex.StackTrace);
-
-                throw; // send proper error to frontend
+                throw;
             }
         }
+
 
 
 
