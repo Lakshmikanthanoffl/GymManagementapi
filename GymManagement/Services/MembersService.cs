@@ -127,7 +127,8 @@ Powered by Zyct Technologies – Membership Automation Platform
 
             using var smtp = new MailKit.Net.Smtp.SmtpClient();
 
-            await smtp.ConnectAsync("smtp.gmail.com", 587, false);
+            await smtp.ConnectAsync("smtp.gmail.com", 465, true);
+
 
             // Authenticate with Zyct official email
             await smtp.AuthenticateAsync("zyct.official@gmail.com", "sprgmexakzwwzuho");
