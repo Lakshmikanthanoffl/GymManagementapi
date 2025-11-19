@@ -79,5 +79,20 @@ namespace GymManagement.Controllers
             var attendance = await _membersService.GetAttendanceAsync(id);
             return Ok(attendance);
         }
+        [HttpPost("send-qr-email")]
+        public async Task<IActionResult> SendQrEmail([FromBody] QrEmailRequest request)
+        {
+            await _membersService.SendQrEmailAsync(
+                request.Username,
+                request.GymName,
+                request.GymUserEmail,
+                request.Email,
+                request.QrUrl
+            );
+
+            return Ok(new { message = "QR Sent Successfully" });
+        }
+
+
     }
 }

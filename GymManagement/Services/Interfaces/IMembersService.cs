@@ -18,5 +18,10 @@ namespace GymManagement.Interfaces
         // ✅ Attendance methods
         Task MarkAttendanceAsync(int memberId, string date);       // Mark a date for a member
         Task<IEnumerable<string>> GetAttendanceAsync(int memberId); // Get attendance dates for a member
+
+        Task SendQrEmailAsync(string username, string gymName, string gymUserEmail, string toEmail, string qrUrl);
+
+
+
     }
 }

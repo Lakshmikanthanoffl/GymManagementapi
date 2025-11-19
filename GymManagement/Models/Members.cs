@@ -56,5 +56,14 @@ namespace GymManagement.Models
     {
         public string Date { get; set; }  // match exactly "date" casing used in JSON
     }
+    public class QrEmailRequest
+    {
+        public string Username { get; set; }
+        public string GymName { get; set; }
+        public string GymUserEmail { get; set; }
+        public string Email { get; set; }
+        public string QrUrl { get; set; }
+    }
+
 
 }

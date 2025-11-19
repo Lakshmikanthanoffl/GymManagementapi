@@ -1,6 +1,9 @@
 ﻿using GymManagement.Interfaces;
 using GymManagement.Models;
+using MimeKit;
 using System.Collections.Generic;
+using System.Net.Mail;
+using MailKit.Net.Smtp;
 using System.Threading.Tasks;
 
 namespace GymManagement.Services
@@ -56,5 +59,85 @@ namespace GymManagement.Services
         {
             return await _repository.GetAttendanceAsync(memberId);
         }
+
+        public async Task SendQrEmailAsync(string username, string gymName, string gymUserEmail, string toEmail, string qrUrl)
+        {
+            using var httpClient = new HttpClient();
+            var qrBytes = await httpClient.GetByteArrayAsync(qrUrl);
+            using var stream = new MemoryStream(qrBytes);
+
+            var message = new MimeMessage();
+
+            // FROM: Gym email but professionally branded
+            message.From.Add(new MailboxAddress($"{gymName} | Zyct Technologies", gymUserEmail));
+
+            // TO: Member email
+            message.To.Add(new MailboxAddress(username, toEmail));
+
+            message.Subject = $"Your Membership QR Code – {gymName}";
+
+            var body = new BodyBuilder
+            {
+                HtmlBody = $@"
+        <div style='font-family: Arial, sans-serif; font-size:14px; color:#333;'>
+            <p>Dear <strong>{username}</strong>,</p>
+
+            <p>Thank you for being a valued member of <strong>{gymName}</strong>.</p>
+
+            <p>Your membership QR code is attached to this email.  
+            Please use this QR for check-in, verification and member services.</p>
+
+            <br>
+
+            <p>Regards,<br>
+            <strong>{gymName}</strong></p>
+
+            <hr style='margin-top:25px; border:none; border-top:1px solid #ddd;' />
+
+            <p style='font-size:12px; color:#666;'>
+                This email was securely sent via <strong>Zyct Technologies</strong> –  
+                Membership Management & Automation Platform.
+            </p>
+        </div>
+        ",
+
+                TextBody = $@"
+Dear {username},
+
+Your membership QR code is attached.
+Thank you for being a part of {gymName}.
+
+Regards,
+{gymName}
+
+---
+Powered by Zyct Technologies – Membership Automation Platform
+"
+            };
+
+            // Attach QR as image
+            // Dynamic file name (username + gym name)
+            string fileName = $"{username}_{gymName}_QR.png".Replace(" ", "_");
+
+            // Attach QR
+            body.Attachments.Add(fileName, stream);
+
+
+            message.Body = body.ToMessageBody();
+
+            using var smtp = new MailKit.Net.Smtp.SmtpClient();
+
+            await smtp.ConnectAsync("smtp.gmail.com", 587, false);
+
+            // Authenticate with Zyct official email
+            await smtp.AuthenticateAsync("zyct.official@gmail.com", "sprgmexakzwwzuho");
+
+            await smtp.SendAsync(message);
+            await smtp.DisconnectAsync(true);
+        }
+
+
+
+
     }
 }
