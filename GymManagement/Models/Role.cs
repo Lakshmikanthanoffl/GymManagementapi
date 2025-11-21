@@ -62,4 +62,12 @@ namespace GymManagement.Models
         public int GymId { get; set; }
         public string GymName { get; set; }
     }
+    public class UpdateSubscriptionDto
+    {
+        public string PlanName { get; set; }
+        public string SubscriptionPeriod { get; set; }
+        public decimal AmountPaid { get; set; }
+        public DateTime PaidDate { get; set; }
+        public DateTime ValidUntil { get; set; }
+    }
 }

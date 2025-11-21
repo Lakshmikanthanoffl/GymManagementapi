@@ -85,6 +85,8 @@ namespace GymManagement.Controllers
             existingRole.ValidUntil = role.ValidUntil;
             existingRole.AmountPaid = role.AmountPaid;
             existingRole.IsActive = role.IsActive;
+            existingRole.PlanName = role.PlanName;
+            existingRole.SubscriptionPeriod = role.SubscriptionPeriod;
 
             // ✅ Save privileges too
             existingRole.Privileges = role.Privileges ?? new List<string>();
@@ -92,7 +94,30 @@ namespace GymManagement.Controllers
             await _roleService.UpdateRoleAsync(existingRole);
             return Ok(new { message = "Role updated successfully" });
         }
-
+        // PUT: api/role/update-subscription/{id}
+        [HttpPut("update-subscription/{id}")]
+        public async Task<IActionResult> UpdateSubscription(int id, [FromBody] UpdateSubscriptionDto subscription)
+        {
+            if (subscription == null)
+                return BadRequest(new { message = "Invalid subscription data" });
+            var role = await _roleService.GetRoleByIdAsync(id);
+            if (role == null)
+                return NotFound(new { message = "Role not found" });
+            // Update only subscription related fields
+            role.PlanName = subscription.PlanName;
+            role.SubscriptionPeriod = subscription.SubscriptionPeriod;
+            role.AmountPaid = subscription.AmountPaid;
+            role.PaidDate = subscription.PaidDate;
+            role.ValidUntil = subscription.ValidUntil;
+            // Activate user after payment
+            role.IsActive = true;
+            await _roleService.UpdateRoleAsync(role);
+            return Ok(new
+            {
+                message = "Subscription updated successfully",
+                role
+            });
+        }
         // DELETE: api/role/{id}
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteRole(int id)
@@ -135,7 +160,8 @@ namespace GymManagement.Controllers
                 role.ValidUntil,
                 role.AmountPaid,
                 role.IsActive,
-                role.Privileges // ✅ send menus
+                role.Privileges,// :white_check_mark: send menus
+                role.PlanName
             });
         }
 
