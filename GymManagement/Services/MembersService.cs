@@ -60,77 +60,81 @@ namespace GymManagement.Services
             return await _repository.GetAttendanceAsync(memberId);
         }
 
-        public async Task SendQrEmailAsync(
-    string username,
-    string gymName,
-    string gymUserEmail,
-    string toEmail,
-    string qrUrl)
+        public async Task SendQrEmailAsync(string username, string gymName, string gymUserEmail, string toEmail, string qrUrl)
         {
-            try
+            using var httpClient = new HttpClient();
+            var qrBytes = await httpClient.GetByteArrayAsync(qrUrl);
+            using var stream = new MemoryStream(qrBytes);
+
+            var message = new MimeMessage();
+
+            // FROM: Gym email but professionally branded
+            message.From.Add(new MailboxAddress($"{gymName} | Zyct Technologies", gymUserEmail));
+
+            // TO: Member email
+            message.To.Add(new MailboxAddress(username, toEmail));
+
+            message.Subject = $"Your Membership QR Code – {gymName}";
+
+            var body = new BodyBuilder
             {
-                // 1️⃣ Download QR
-                using var httpClient = new HttpClient();
-                var qrBytes = await httpClient.GetByteArrayAsync(qrUrl);
-                using var stream = new MemoryStream(qrBytes);
+                HtmlBody = $@"
+        <div style='font-family: Arial, sans-serif; font-size:14px; color:#333;'>
+            <p>Dear <strong>{username}</strong>,</p>
 
-                // 2️⃣ Build Email
-                var message = new MimeMessage();
+            <p>Thank you for being a valued member of <strong>{gymName}</strong>.</p>
 
-                // Sender → MUST be Gmail App password email stored in Render env
-                message.From.Add(new MailboxAddress($"{gymName} | Zyct Technologies",
-                    Environment.GetEnvironmentVariable("EMAIL_USER")));
+            <p>Your membership QR code is attached to this email.  
+            Please use this QR for check-in, verification and member services.</p>
 
-                // Receiver
-                message.To.Add(new MailboxAddress(username, toEmail));
-                message.Subject = $"Your Membership QR Code – {gymName}";
+            <br>
 
-                var body = new BodyBuilder
-                {
-                    HtmlBody = $@"
-            <div style='font-family: Arial; font-size:14px;'>
-                <p>Dear <strong>{username}</strong>,</p>
-                <p>Your membership QR code is attached.</p>
-                <p>Regards,<br><strong>{gymName}</strong></p>
-            </div>
-            ",
-                    TextBody = $"Dear {username}, your QR code is attached."
-                };
+            <p>Regards,<br>
+            <strong>{gymName}</strong></p>
 
-                // 3️⃣ Attach QR file
-                string fileName = $"{username}_{gymName}_QR.png".Replace(" ", "_");
-                body.Attachments.Add(fileName, stream);
-                message.Body = body.ToMessageBody();
+            <hr style='margin-top:25px; border:none; border-top:1px solid #ddd;' />
 
-                // 4️⃣ SMTP
-                using var smtp = new MailKit.Net.Smtp.SmtpClient();
+            <p style='font-size:12px; color:#666;'>
+                This email was securely sent via <strong>Zyct Technologies</strong> –  
+                Membership Management & Automation Platform.
+            </p>
+        </div>
+        ",
 
-                // Render fix — ignore certificate issues
-                smtp.ServerCertificateValidationCallback = (s, c, h, e) => true;
+                TextBody = $@"
+Dear {username},
 
-                // Connect Gmail SMTP
-                await smtp.ConnectAsync("smtp.gmail.com", 587, MailKit.Security.SecureSocketOptions.StartTls);
+Your membership QR code is attached.
+Thank you for being a part of {gymName}.
 
-                // Authenticate using Render environment variables
-                await smtp.AuthenticateAsync(
-                    Environment.GetEnvironmentVariable("EMAIL_USER"),
-                    Environment.GetEnvironmentVariable("EMAIL_PASS")
-                );
+Regards,
+{gymName}
 
-                // Send email
-                await smtp.SendAsync(message);
+---
+Powered by Zyct Technologies – Membership Automation Platform
+"
+            };
 
-                // Disconnect
-                await smtp.DisconnectAsync(true);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("EMAIL ERROR: " + ex.Message);
-                Console.WriteLine(ex.StackTrace);
-                throw;
-            }
+            // Attach QR as image
+            // Dynamic file name (username + gym name)
+            string fileName = $"{username}_{gymName}_QR.png".Replace(" ", "_");
+
+            // Attach QR
+            body.Attachments.Add(fileName, stream);
+
+
+            message.Body = body.ToMessageBody();
+
+            using var smtp = new MailKit.Net.Smtp.SmtpClient();
+
+            await smtp.ConnectAsync("smtp.gmail.com", 587, false);
+
+            // Authenticate with Zyct official email
+            await smtp.AuthenticateAsync("zyct.official@gmail.com", "sprgmexakzwwzuho");
+
+            await smtp.SendAsync(message);
+            await smtp.DisconnectAsync(true);
         }
-
 
 
 
